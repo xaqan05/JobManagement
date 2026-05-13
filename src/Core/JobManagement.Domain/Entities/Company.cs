@@ -1,7 +1,8 @@
-﻿namespace JobManagement.Domain.Entities;
-public class Company
+﻿using JobManagement.Domain.Entities.Common;
+
+namespace JobManagement.Domain.Entities;
+public class Company : BaseEntity
 {
-    public Guid Id { get; set; }
 
     public Guid UserId { get; set; }
 

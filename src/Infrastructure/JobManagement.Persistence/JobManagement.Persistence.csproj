@@ -19,8 +19,4 @@
     <ProjectReference Include="..\..\Core\JobManagement.Application\JobManagement.Application.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Implements\" />
-  </ItemGroup>
-
 </Project>
