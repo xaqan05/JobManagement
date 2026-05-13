@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Core/">
+    <Project Path="src/Core/JobManagement.Application/JobManagement.Application.csproj" />
+    <Project Path="src/Core/JobManagement.Domain/JobManagement.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Infrastructure/">
+    <Project Path="src/Infrastructure/JobManagement.Infrastructure/JobManagement.Infrastructure.csproj" />
+    <Project Path="src/Infrastructure/JobManagement.Persistence/JobManagement.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentation/">
+    <Project Path="src/Presentation/JobManagement.API/JobManagement.API.csproj" />
+  </Folder>
+</Solution>
