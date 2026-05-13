@@ -12,9 +12,12 @@ public class Company : BaseEntity
 
     public string VOEN { get; set; } = null!;
 
+    public DateTime? FoundedDate { get; set; }
+    public int? EmployeeCount { get; set; }
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public string? Description { get; set; }
     public string? Website { get; set; }
-
     public string? Address { get; set; }
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string? Location { get; set; }
 }

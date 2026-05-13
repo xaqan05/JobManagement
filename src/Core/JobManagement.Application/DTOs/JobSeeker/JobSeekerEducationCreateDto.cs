@@ -1,0 +1,12 @@
+using JobManagement.Domain.Enums.JobSeeker;
+
+namespace JobManagement.Application.DTOs.JobSeeker;
+public class JobSeekerEducationCreateDto
+{
+    public Guid InstitutionId { get; set; }
+    public string SpecialtyName { get; set; } = null!;
+    public EducationLevel EducationLevel { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public bool IsCurrentlyStudying { get; set; }
+}

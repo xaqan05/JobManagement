@@ -1,7 +1,14 @@
-
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using JobManagement.API.Services;
+using JobManagement.Application.Interfaces;
+using JobManagement.Domain.Entities;
 using JobManagement.Persistence;
 using JobManagement.Application;
+using JobManagement.Persistence.Context;
 
 
 
@@ -18,8 +25,48 @@ builder.Services.AddEndpointsApiExplorer();
 
 
 builder.Services.AddMsSql(builder.Configuration.GetConnectionString("DefaultConnection")!);
+builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>()
+    .AddPasswordValidator<PasswordValidator<AppUser>>()
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.Password.RequiredLength = 8;
+    options.Password.RequireDigit = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireLowercase = false;
+    options.Password.RequiredUniqueChars = 1;
+});
+
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "JobManagementSecretKeyForDevelopmentOnly12345";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "JobManagement";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "JobManagementUsers";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+    };
+});
+
 builder.Services.AddRepos();
 builder.Services.AddServices();
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddAuthorization();
 
 
 
@@ -82,6 +129,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

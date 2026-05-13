@@ -1,6 +1,6 @@
 ﻿using JobManagement.Application.Interfaces;
 
-namespace JobManagement.Persistence.Implements;
+namespace JobManagement.Application.Implements;
 public class CompanyService : ICompanyService
 {
 

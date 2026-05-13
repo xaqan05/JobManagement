@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\JobManagement.Application\JobManagement.Application.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\JobManagement.Infrastructure\JobManagement.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Infrastructure\JobManagement.Persistence\JobManagement.Persistence.csproj" />
   </ItemGroup>
 
