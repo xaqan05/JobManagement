@@ -10,4 +10,8 @@
     <ProjectReference Include="..\JobManagement.Domain\JobManagement.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Interfaces\" />
+  </ItemGroup>
+
 </Project>

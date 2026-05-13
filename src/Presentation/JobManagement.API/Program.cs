@@ -1,5 +1,9 @@
 
 using Microsoft.OpenApi.Models;
+using JobManagement.Persistence;
+using JobManagement.Application;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +12,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
+
+
+
+
+builder.Services.AddMsSql(builder.Configuration.GetConnectionString("DefaultConnection")!);
+builder.Services.AddRepos();
+builder.Services.AddServices();
+
+
+
+
+
+
 
 builder.Services.AddSwaggerGen(c =>
 {
