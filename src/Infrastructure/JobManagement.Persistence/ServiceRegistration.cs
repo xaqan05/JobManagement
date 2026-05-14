@@ -14,7 +14,6 @@ public static class ServiceRegistration
 
     public static IServiceCollection AddRepos(this IServiceCollection services)
     {
-        services.AddScoped<ICompanyRepository, CompanyRepository>();
         services.AddScoped<IJobSeekerRepository, JobSeekerRepository>();
         services.AddScoped<IJobSeekerPhoneRepository, JobSeekerPhoneRepository>();
         services.AddScoped<IJobSeekerEducationRepository, JobSeekerEducationRepository>();
@@ -29,6 +28,12 @@ public static class ServiceRegistration
         services.AddScoped<ILanguageRepository, LanguageRepository>();
         services.AddScoped<ISkillRepository, SkillRepository>();
         services.AddScoped<ISocialPlatformRepository, SocialPlatformRepository>();
+
+
+
+
+        services.AddScoped<ICompanyRepository, CompanyRepository>();
+        services.AddScoped<IVacancyRepository, VacancyRepository>();
 
         return services;
     }

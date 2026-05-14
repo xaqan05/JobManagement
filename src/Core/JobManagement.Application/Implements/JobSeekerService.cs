@@ -4,6 +4,8 @@ using JobManagement.Application.Interfaces;
 using JobManagement.Application.Repositories;
 using JobManagement.Domain.Entities;
 using JobManagement.Domain.Enums.Role;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 
 namespace JobManagement.Application.Implements;
@@ -24,6 +26,7 @@ public class JobSeekerService : IJobSeekerService
     private readonly ILanguageRepository _languageRepository;
     private readonly ISkillRepository _skillRepository;
     private readonly ISocialPlatformRepository _socialPlatformRepository;
+    private readonly IWebHostEnvironment _webHostEnvironment;
 
     public JobSeekerService(
         UserManager<AppUser> userManager,
@@ -40,7 +43,8 @@ public class JobSeekerService : IJobSeekerService
         IJobSeekerJobPositionRepository jobPositionRepository,
         ILanguageRepository languageRepository,
         ISkillRepository skillRepository,
-        ISocialPlatformRepository socialPlatformRepository)
+        ISocialPlatformRepository socialPlatformRepository,
+        IWebHostEnvironment webHostEnvironment)
     {
         _userManager = userManager;
         _jobSeekerRepository = jobSeekerRepository;
@@ -57,6 +61,7 @@ public class JobSeekerService : IJobSeekerService
         _languageRepository = languageRepository;
         _skillRepository = skillRepository;
         _socialPlatformRepository = socialPlatformRepository;
+        _webHostEnvironment = webHostEnvironment;
     }
 
     public async Task<ApiResponse<JobSeekerCvGetDto>> CreateCvAsync(Guid userId, CreateCvDto dto)
@@ -78,6 +83,9 @@ public class JobSeekerService : IJobSeekerService
 
             if (jobSeeker.User.UserType != UserType.JobSeeker)
                 return ApiResponse<JobSeekerCvGetDto>.Fail("Bu əməliyyatı yalnız JobSeeker edə bilər.");
+
+            if (IsCvAlreadyCreated(jobSeeker))
+                return ApiResponse<JobSeekerCvGetDto>.Fail("CV artıq yaradılıb.");
 
             var referenceValidation = await ValidateReferenceDataAsync(dto);
 
@@ -108,7 +116,6 @@ public class JobSeekerService : IJobSeekerService
             jobSeeker.IsAnonym = false;
             jobSeeker.UpdatedAt = DateTime.UtcNow;
 
-            ClearOldCvDetails(jobSeeker);
             await CreateCvDetailsAsync(jobSeeker.Id, dto);
             await _jobSeekerRepository.SaveAsync();
 
@@ -237,9 +244,71 @@ public class JobSeekerService : IJobSeekerService
 
             if (string.IsNullOrWhiteSpace(certificate.IssuingOrganization))
                 return ApiResponse<JobSeekerCvGetDto>.Fail("Sertifikatı verən təşkilat boş ola bilməz.");
+
+            if (certificate.CertificateImage == null || certificate.CertificateImage.Length == 0)
+                return ApiResponse<JobSeekerCvGetDto>.Fail("Sertifikat şəkli boş ola bilməz.");
+
+            if (!IsImage(certificate.CertificateImage))
+                return ApiResponse<JobSeekerCvGetDto>.Fail("Sertifikat faylı şəkil formatında olmalıdır.");
         }
 
         return null;
+    }
+
+    private bool IsCvAlreadyCreated(JobSeeker jobSeeker)
+    {
+        return jobSeeker.UpdatedAt != null
+            || !string.IsNullOrWhiteSpace(jobSeeker.About)
+            || !string.IsNullOrWhiteSpace(jobSeeker.Address)
+            || jobSeeker.BirthDate != null
+            || jobSeeker.JobCategoryId != null
+            || jobSeeker.JobPositionId != null
+            || jobSeeker.Gender != null
+            || jobSeeker.FamilyStatus != null
+            || jobSeeker.Citizenship != null
+            || jobSeeker.MilitaryStatus != null
+            || jobSeeker.DriverLicense != null
+            || jobSeeker.HasEducation
+            || jobSeeker.HasExperience
+            || jobSeeker.Phones.Any()
+            || jobSeeker.Educations.Any()
+            || jobSeeker.Experiences.Any()
+            || jobSeeker.Languages.Any()
+            || jobSeeker.Skills.Any()
+            || jobSeeker.Links.Any()
+            || jobSeeker.Certificates.Any();
+    }
+
+    private bool IsImage(IFormFile file)
+    {
+        var allowedExtensions = new List<string> { ".jpg", ".jpeg", ".png", ".webp" };
+        var extension = Path.GetExtension(file.FileName).ToLower();
+
+        return file.ContentType.StartsWith("image/") && allowedExtensions.Contains(extension);
+    }
+
+    private async Task<string> SaveCertificateImageAsync(IFormFile file)
+    {
+        var extension = Path.GetExtension(file.FileName).ToLower();
+        var fileName = $"{Guid.NewGuid()}{extension}";
+        var webRootPath = _webHostEnvironment.WebRootPath;
+
+        if (string.IsNullOrWhiteSpace(webRootPath))
+            webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+
+        var folderPath = Path.Combine(webRootPath, "uploads", "certificates");
+
+        if (!Directory.Exists(folderPath))
+            Directory.CreateDirectory(folderPath);
+
+        var filePath = Path.Combine(folderPath, fileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        return $"/uploads/certificates/{fileName}";
     }
 
     private async Task UpdateUserAsync(AppUser user, CreateCvDto dto)
@@ -250,30 +319,6 @@ public class JobSeekerService : IJobSeekerService
         user.UserName = dto.Email.Trim();
 
         await _userManager.UpdateAsync(user);
-    }
-
-    private void ClearOldCvDetails(JobSeeker jobSeeker)
-    {
-        foreach (var phone in jobSeeker.Phones.ToList())
-            _phoneRepository.Remove(phone);
-
-        foreach (var education in jobSeeker.Educations.ToList())
-            _educationRepository.Remove(education);
-
-        foreach (var experience in jobSeeker.Experiences.ToList())
-            _experienceRepository.Remove(experience);
-
-        foreach (var language in jobSeeker.Languages.ToList())
-            _jobSeekerLanguageRepository.Remove(language);
-
-        foreach (var skill in jobSeeker.Skills.ToList())
-            _jobSeekerSkillRepository.Remove(skill);
-
-        foreach (var link in jobSeeker.Links.ToList())
-            _linkRepository.Remove(link);
-
-        foreach (var certificate in jobSeeker.Certificates.ToList())
-            _certificateRepository.Remove(certificate);
     }
 
     private async Task CreateCvDetailsAsync(Guid jobSeekerId, CreateCvDto dto)
@@ -359,13 +404,15 @@ public class JobSeekerService : IJobSeekerService
 
         foreach (var certificate in dto.Certificates ?? new List<JobSeekerCertificateCreateDto>())
         {
+            var certificateImageUrl = await SaveCertificateImageAsync(certificate.CertificateImage!);
+
             await _certificateRepository.CreateAsync(new JobSeekerCertificate
             {
                 Id = Guid.NewGuid(),
                 JobSeekerId = jobSeekerId,
                 CertificateName = certificate.CertificateName.Trim(),
                 IssuingOrganization = certificate.IssuingOrganization.Trim(),
-                CertificateImageUrl = certificate.CertificateImageUrl?.Trim(),
+                CertificateImageUrl = certificateImageUrl,
                 CreatedAt = DateTime.UtcNow
             });
         }

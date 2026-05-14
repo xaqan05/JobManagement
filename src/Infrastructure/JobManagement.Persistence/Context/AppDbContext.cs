@@ -26,6 +26,11 @@ public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
     public DbSet<JobSeekerLink> JobSeekerLinks { get; set; }
     public DbSet<JobSeekerCertificate> JobSeekerCertificates { get; set; }
 
+
+    public DbSet<Vacancy> Vacancies { get; set; }
+
+
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

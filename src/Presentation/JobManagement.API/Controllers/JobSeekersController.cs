@@ -19,7 +19,8 @@ public class JobSeekersController : ControllerBase
     }
 
     [HttpPost("create-cv")]
-    public async Task<IActionResult> CreateCv(CreateCvDto dto)
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> CreateCv([FromForm] CreateCvDto dto)
     {
         var userId = GetUserId();
 
