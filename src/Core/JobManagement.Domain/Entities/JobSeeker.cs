@@ -36,4 +36,7 @@ public class JobSeeker : BaseEntity
     public ICollection<JobSeekerSkill> Skills { get; set; } = new List<JobSeekerSkill>();
     public ICollection<JobSeekerLink> Links { get; set; } = new List<JobSeekerLink>();
     public ICollection<JobSeekerCertificate> Certificates { get; set; } = new List<JobSeekerCertificate>();
+
+
+
 }

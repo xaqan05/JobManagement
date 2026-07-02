@@ -1,214 +1,132 @@
 using JobManagement.Domain.Entities;
+using JobManagement.Domain.Entities.Test;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace JobManagement.Persistence.Context;
-public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
+public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
 
-    public DbSet<Company> Companies { get; set; }
-    public DbSet<JobSeeker> JobSeekers { get; set; }
-    public DbSet<JobSeekerPhone> JobSeekerPhones { get; set; }
-    public DbSet<JobSeekerJobCategory> JobSeekerJobCategories { get; set; }
-    public DbSet<JobSeekerJobPosition> JobSeekerJobPositions { get; set; }
-    public DbSet<EducationInstitution> EducationInstitutions { get; set; }
-    public DbSet<JobSeekerEducation> JobSeekerEducations { get; set; }
-    public DbSet<JobSeekerExperience> JobSeekerExperiences { get; set; }
-    public DbSet<Language> Languages { get; set; }
-    public DbSet<JobSeekerLanguage> JobSeekerLanguages { get; set; }
-    public DbSet<Skill> CommonSkills { get; set; }
-    public DbSet<JobSeekerSkill> JobSeekerSkills { get; set; }
-    public DbSet<SocialPlatform> SocialPlatforms { get; set; }
-    public DbSet<JobSeekerLink> JobSeekerLinks { get; set; }
-    public DbSet<JobSeekerCertificate> JobSeekerCertificates { get; set; }
+    //public DbSet<Company> Companies { get; set; }
+    //public DbSet<JobSeeker> JobSeekers { get; set; }
+    //public DbSet<JobSeekerPhone> JobSeekerPhones { get; set; }
+    //public DbSet<JobSeekerJobCategory> JobSeekerJobCategories { get; set; }
+    //public DbSet<JobSeekerJobPosition> JobSeekerJobPositions { get; set; }
+    //public DbSet<EducationInstitution> EducationInstitutions { get; set; }
+    //public DbSet<JobSeekerEducation> JobSeekerEducations { get; set; }
+    //public DbSet<JobSeekerExperience> JobSeekerExperiences { get; set; }
+    //public DbSet<Language> Languages { get; set; }
+    //public DbSet<JobSeekerLanguage> JobSeekerLanguages { get; set; }
+    //public DbSet<Skill> CommonSkills { get; set; }
+    //public DbSet<JobSeekerSkill> JobSeekerSkills { get; set; }
+    //public DbSet<SocialPlatform> SocialPlatforms { get; set; }
+    //public DbSet<JobSeekerLink> JobSeekerLinks { get; set; }
+    //public DbSet<JobSeekerCertificate> JobSeekerCertificates { get; set; }
 
 
-    public DbSet<Vacancy> Vacancies { get; set; }
+    //public DbSet<Vacancy> Vacancies { get; set; }
+
+    public DbSet<Service> Services => Set<Service>();
+    public DbSet<ServiceVariant> ServiceVariants => Set<ServiceVariant>();
+    public DbSet<Country> Countries => Set<Country>();
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Sale> Sales => Set<Sale>();
+    public DbSet<SaleItem> SaleItems => Set<SaleItem>();
+    public DbSet<Department> Departments => Set<Department>();
+    public DbSet<Operator> Operators => Set<Operator>();
 
 
 
-    protected override void OnModelCreating(ModelBuilder builder)
+    protected override void OnModelCreating(ModelBuilder b)
     {
-        base.OnModelCreating(builder);
+        // Sequence-lərin yaradılması
+        b.HasSequence<long>("sale_code_seq").StartsAt(100001);
+        b.HasSequence<long>("customer_code_seq").StartsAt(10000001);
 
-        builder.Entity<AppUser>(entity =>
+        b.Entity<Service>(e =>
         {
-            entity.ToTable("Users");
-            entity.Property(x => x.Name).IsRequired().HasMaxLength(100);
-            entity.Property(x => x.Surname).IsRequired().HasMaxLength(100);
-            entity.Property(x => x.PhotoUrl).HasMaxLength(500);
+            e.Property(x => x.Name).HasMaxLength(200);
+            e.Property(x => x.Unit).HasMaxLength(20);
+            e.Property(x => x.Note).HasMaxLength(200);
         });
 
-        builder.Entity<IdentityRole<Guid>>().ToTable("Roles");
-        builder.Entity<IdentityUserRole<Guid>>().ToTable("UserRoles");
-        builder.Entity<IdentityUserClaim<Guid>>().ToTable("UserClaims");
-        builder.Entity<IdentityUserLogin<Guid>>().ToTable("UserLogins");
-        builder.Entity<IdentityRoleClaim<Guid>>().ToTable("RoleClaims");
-        builder.Entity<IdentityUserToken<Guid>>().ToTable("UserTokens");
-
-        builder.Entity<Company>(entity =>
+        b.Entity<ServiceVariant>(e =>
         {
-            entity.HasIndex(x => x.UserId).IsUnique();
-            entity.HasIndex(x => x.VOEN).IsUnique();
-            entity.Property(x => x.CompanyName).IsRequired().HasMaxLength(200);
-            entity.Property(x => x.VOEN).IsRequired().HasMaxLength(50);
-            entity.Property(x => x.Email).HasMaxLength(256);
-            entity.Property(x => x.Phone).HasMaxLength(50);
-            entity.Property(x => x.Website).HasMaxLength(300);
-            entity.Property(x => x.Address).HasMaxLength(500);
-            entity.Property(x => x.Location).HasMaxLength(200);
+            e.Property(x => x.Price).HasPrecision(10, 2);
 
-            entity.HasOne(x => x.User)
-                .WithOne(x => x.Company)
-                .HasForeignKey<Company>(x => x.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // DÜZƏLİŞ: 'b.HasOne' yox, 'e.HasOne' olmalıdır!
+            e.HasOne(x => x.Service)
+             .WithMany(s => s.Variants)
+             .HasForeignKey(x => x.ServiceId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(x => new { x.ServiceId, x.Variant }).IsUnique();
         });
 
-        builder.Entity<JobSeeker>(entity =>
+        b.Entity<Country>(e =>
         {
-            entity.HasIndex(x => x.UserId).IsUnique();
-            entity.Property(x => x.Email).HasMaxLength(256);
-            entity.Property(x => x.Address).HasMaxLength(500);
+            e.Property(x => x.Name).HasMaxLength(100);
+            e.Property(x => x.IsoCode).HasMaxLength(2);
+            e.HasIndex(x => x.IsoCode).IsUnique();
+            e.HasIndex(x => x.LegacyId).IsUnique();
+        });
 
-            entity.HasOne(x => x.User)
-                .WithOne(x => x.JobSeeker)
-                .HasForeignKey<JobSeeker>(x => x.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+        b.Entity<Customer>(e =>
+        {
+            e.HasIndex(x => x.IdentityNo).IsUnique();
+            e.HasIndex(x => x.CustomerCode).IsUnique();
 
-            entity.HasOne(x => x.JobCategory)
-                .WithMany()
-                .HasForeignKey(x => x.JobCategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
+            // 🛠️ DÜZƏLİŞ: PostgreSQL 'nextval' silindi, SQL Server üçün rəsmi sintaksis yazıldı
+            e.Property(x => x.CustomerCode).HasDefaultValueSql("NEXT VALUE FOR customer_code_seq");
 
-            entity.HasOne(x => x.JobPosition)
-                .WithMany()
-                .HasForeignKey(x => x.JobPositionId)
+            e.Property(x => x.IdentityNo).HasMaxLength(20);
+            e.Property(x => x.FirstName).HasMaxLength(100);
+            e.Property(x => x.LastName).HasMaxLength(100);
+            e.Property(x => x.CompanyName).HasMaxLength(200);
+            e.HasOne(x => x.CitizenshipCountry).WithMany().HasForeignKey(x => x.CitizenshipCountryId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        builder.Entity<JobSeekerPhone>(entity =>
+        b.Entity<Sale>(e =>
         {
-            entity.Property(x => x.PhoneNumber).IsRequired().HasMaxLength(50);
-            entity.Property(x => x.CountryCode).IsRequired().HasMaxLength(10);
-            entity.HasOne(x => x.JobSeeker)
-                .WithMany(x => x.Phones)
-                .HasForeignKey(x => x.JobSeekerId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
+            e.HasIndex(x => x.SaleCode).IsUnique();
 
-        builder.Entity<JobSeekerJobCategory>(entity =>
-        {
-            entity.Property(x => x.Name).IsRequired().HasMaxLength(150);
-        });
+            // 🛠️ DÜZƏLİŞ: PostgreSQL 'nextval' silindi, SQL Server üçün rəsmi sintaksis yazıldı
+            e.Property(x => x.SaleCode).HasDefaultValueSql("NEXT VALUE FOR sale_code_seq");
 
-        builder.Entity<JobSeekerJobPosition>(entity =>
-        {
-            entity.Property(x => x.Name).IsRequired().HasMaxLength(150);
-            entity.HasOne(x => x.JobCategory)
-                .WithMany(x => x.Positions)
-                .HasForeignKey(x => x.JobCategoryId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
+            e.HasIndex(x => x.ClientRequestId).IsUnique();
+            e.HasIndex(x => x.Status);
+            e.Property(x => x.CustomerNameSnapshot).HasMaxLength(200);
+            e.Property(x => x.CustomerIdentitySnapshot).HasMaxLength(20);
+            e.Property(x => x.Phone).HasMaxLength(30);
+            e.Property(x => x.CargoType).HasMaxLength(200);
+            e.Property(x => x.VehiclePlate).HasMaxLength(20);
+            e.Property(x => x.TotalAmount).HasPrecision(10, 2);
 
-        builder.Entity<EducationInstitution>(entity =>
-        {
-            entity.HasIndex(x => x.Name).IsUnique();
-            entity.Property(x => x.Name).IsRequired().HasMaxLength(250);
-        });
-
-        builder.Entity<JobSeekerEducation>(entity =>
-        {
-            entity.Property(x => x.SpecialtyName).IsRequired().HasMaxLength(200);
-            entity.HasOne(x => x.JobSeeker)
-                .WithMany(x => x.Educations)
-                .HasForeignKey(x => x.JobSeekerId)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(x => x.Institution)
-                .WithMany()
-                .HasForeignKey(x => x.InstitutionId)
+            e.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        builder.Entity<JobSeekerExperience>(entity =>
-        {
-            entity.Property(x => x.CompanyName).IsRequired().HasMaxLength(200);
-            entity.Property(x => x.PositionName).IsRequired().HasMaxLength(200);
-            entity.HasOne(x => x.JobSeeker)
-                .WithMany(x => x.Experiences)
-                .HasForeignKey(x => x.JobSeekerId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        builder.Entity<Language>(entity =>
-        {
-            entity.HasIndex(x => x.Name).IsUnique();
-            entity.Property(x => x.Name).IsRequired().HasMaxLength(100);
-        });
-
-        builder.Entity<JobSeekerLanguage>(entity =>
-        {
-            entity.HasIndex(x => new { x.JobSeekerId, x.LanguageId }).IsUnique();
-            entity.HasOne(x => x.JobSeeker)
-                .WithMany(x => x.Languages)
-                .HasForeignKey(x => x.JobSeekerId)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(x => x.Language)
-                .WithMany()
-                .HasForeignKey(x => x.LanguageId)
+            e.HasOne(x => x.DriverCitizenship).WithMany().HasForeignKey(x => x.DriverCitizenshipId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // 🛠️ DÜZƏLİŞ (Qərar #3): PostgreSQL "xmin" (uint) kölgə sahəsi silindi. 
+            // Yerınə SQL Server üçün standart olan byte[] tipli RowVersion (timestamp) əlavə edildi.
+            e.Property<byte[]>("RowVersion")
+                .IsRowVersion()
+                .IsConcurrencyToken();
         });
 
-        builder.Entity<Skill>(entity =>
+        b.Entity<SaleItem>(e =>
         {
-            entity.ToTable("CommonSkills");
-            entity.HasIndex(x => x.Name).IsUnique();
-            entity.Property(x => x.Name).IsRequired().HasMaxLength(100);
-        });
-
-        builder.Entity<JobSeekerSkill>(entity =>
-        {
-            entity.HasIndex(x => new { x.JobSeekerId, x.SkillId }).IsUnique();
-            entity.HasOne(x => x.JobSeeker)
-                .WithMany(x => x.Skills)
-                .HasForeignKey(x => x.JobSeekerId)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(x => x.Skill)
-                .WithMany()
-                .HasForeignKey(x => x.SkillId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        builder.Entity<SocialPlatform>(entity =>
-        {
-            entity.HasIndex(x => x.Name).IsUnique();
-            entity.Property(x => x.Name).IsRequired().HasMaxLength(100);
-        });
-
-        builder.Entity<JobSeekerLink>(entity =>
-        {
-            entity.Property(x => x.Url).IsRequired().HasMaxLength(500);
-            entity.HasOne(x => x.JobSeeker)
-                .WithMany(x => x.Links)
-                .HasForeignKey(x => x.JobSeekerId)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(x => x.SocialPlatform)
-                .WithMany()
-                .HasForeignKey(x => x.SocialPlatformId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        builder.Entity<JobSeekerCertificate>(entity =>
-        {
-            entity.Property(x => x.CertificateName).IsRequired().HasMaxLength(200);
-            entity.Property(x => x.IssuingOrganization).IsRequired().HasMaxLength(200);
-            entity.Property(x => x.CertificateImageUrl).HasMaxLength(500);
-            entity.HasOne(x => x.JobSeeker)
-                .WithMany(x => x.Certificates)
-                .HasForeignKey(x => x.JobSeekerId)
+            e.Property(x => x.ServiceName).HasMaxLength(200);
+            e.Property(x => x.VariantName).HasMaxLength(50);
+            e.Property(x => x.Unit).HasMaxLength(20);
+            e.Property(x => x.UnitPrice).HasPrecision(10, 2);
+            e.Property(x => x.Total).HasPrecision(10, 2);
+            e.HasOne(x => x.Sale).WithMany(s => s.Items).HasForeignKey(x => x.SaleId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

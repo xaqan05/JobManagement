@@ -4,6 +4,7 @@ using JobManagement.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JobManagement.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260625082436_Created")]
+    partial class Created
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,9 +45,6 @@ namespace JobManagement.Persistence.Migrations
                         .HasMaxLength(2)
                         .HasColumnType("nvarchar(2)");
 
-                    b.Property<int>("LegacyId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -53,9 +53,6 @@ namespace JobManagement.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IsoCode")
-                        .IsUnique();
-
-                    b.HasIndex("LegacyId")
                         .IsUnique();
 
                     b.ToTable("Countries");
@@ -114,36 +111,6 @@ namespace JobManagement.Persistence.Migrations
                     b.ToTable("Customers");
                 });
 
-            modelBuilder.Entity("JobManagement.Domain.Entities.Test.Department", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Departments");
-                });
-
-            modelBuilder.Entity("JobManagement.Domain.Entities.Test.Operator", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Operators");
-                });
-
             modelBuilder.Entity("JobManagement.Domain.Entities.Test.Sale", b =>
                 {
                     b.Property<Guid>("Id")
@@ -185,13 +152,7 @@ namespace JobManagement.Persistence.Migrations
                     b.Property<byte>("CustomerTypeSnapshot")
                         .HasColumnType("tinyint");
 
-                    b.Property<Guid>("DepartmentId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("DriverCitizenshipId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("OperatorId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("PaidAt")
@@ -235,11 +196,7 @@ namespace JobManagement.Persistence.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("DepartmentId");
-
                     b.HasIndex("DriverCitizenshipId");
-
-                    b.HasIndex("OperatorId");
 
                     b.HasIndex("SaleCode")
                         .IsUnique();
@@ -374,31 +331,15 @@ namespace JobManagement.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("JobManagement.Domain.Entities.Test.Department", "Department")
-                        .WithMany("Sales")
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("JobManagement.Domain.Entities.Test.Country", "DriverCitizenship")
                         .WithMany()
                         .HasForeignKey("DriverCitizenshipId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("JobManagement.Domain.Entities.Test.Operator", "Operator")
-                        .WithMany("Sales")
-                        .HasForeignKey("OperatorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Customer");
 
-                    b.Navigation("Department");
-
                     b.Navigation("DriverCitizenship");
-
-                    b.Navigation("Operator");
                 });
 
             modelBuilder.Entity("JobManagement.Domain.Entities.Test.SaleItem", b =>
@@ -427,16 +368,6 @@ namespace JobManagement.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Service");
-                });
-
-            modelBuilder.Entity("JobManagement.Domain.Entities.Test.Department", b =>
-                {
-                    b.Navigation("Sales");
-                });
-
-            modelBuilder.Entity("JobManagement.Domain.Entities.Test.Operator", b =>
-                {
-                    b.Navigation("Sales");
                 });
 
             modelBuilder.Entity("JobManagement.Domain.Entities.Test.Sale", b =>
